@@ -25,10 +25,7 @@ export function Header() {
         <div className="container flex h-14 max-w-screen-2xl items-center">
           <div className="mr-4 flex">
             <a href="/" className="mr-6 flex items-center space-x-2">
-              <Icons.logo className="h-8 w-8 text-primary" />
-              <span className="font-bold font-headline sm:inline-block">
-                LearnAI
-              </span>
+              <Icons.logo className="h-10 w-auto text-primary" />
             </a>
           </div>
           <div className="flex flex-1 items-center justify-end space-x-4">

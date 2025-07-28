@@ -4,7 +4,7 @@ export const Icons = {
   logo: (props: SVGProps<SVGSVGElement>) => (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 100 24"
+      viewBox="0 0 160 24"
       fill="none"
       stroke="currentColor"
       strokeWidth="2"
@@ -18,6 +18,16 @@ export const Icons = {
       <path d="M12 12c2.76 0 5-2.24 5-5s-2.24-5 5-5" />
       <path d="M7 17c-1.66 0-3-1.34-3-3" />
       <path d="M17 17c1.66 0 3-1.34 3-3" />
+      <text
+        x="30"
+        y="18"
+        fontFamily="Poppins, sans-serif"
+        fontSize="20"
+        fontWeight="bold"
+        fill="hsl(var(--foreground))"
+      >
+        LearnAI
+      </text>
     </svg>
   ),
 };
