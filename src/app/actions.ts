@@ -47,8 +47,8 @@ export async function getQuiz(topic: string, count: number): Promise<QuizActionR
      if (!topic || topic.trim().length < 3) {
         return { error: 'Invalid topic.' };
     }
-    if(count < 1 || count > 10){
-        return { error: 'Number of questions must be between 1 and 10.' };
+    if(count < 1){
+        return { error: 'Number of questions must be at least 1.' };
     }
 
     try {

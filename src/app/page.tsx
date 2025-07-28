@@ -154,7 +154,7 @@ export default function Home() {
                       <Input 
                         type="number"
                         value={quizCount}
-                        onChange={(e) => setQuizCount(Math.max(1, Math.min(10, parseInt(e.target.value, 10) || 1)))}
+                        onChange={(e) => setQuizCount(Math.max(1, parseInt(e.target.value, 10) || 1))}
                         className="w-24"
                         disabled={isQuizLoading}
                       />
