@@ -17,7 +17,7 @@ const GenerateExplanationInputSchema = z.object({
 export type GenerateExplanationInput = z.infer<typeof GenerateExplanationInputSchema>;
 
 const GenerateExplanationOutputSchema = z.object({
-  explanation: z.string().describe('The AI-generated explanation of the topic.'),
+  explanation: z.string().describe('The AI-generated explanation of the topic, formatted in markdown.'),
 });
 export type GenerateExplanationOutput = z.infer<typeof GenerateExplanationOutputSchema>;
 
@@ -29,9 +29,17 @@ const prompt = ai.definePrompt({
   name: 'generateExplanationPrompt',
   input: {schema: GenerateExplanationInputSchema},
   output: {schema: GenerateExplanationOutputSchema},
-  prompt: `You are an expert educator specializing in creating educational explanations for students.
+  prompt: `You are an expert educator specializing in creating clear, professional, and easy-to-understand educational content for students.
 
-You will use this information to generate an explanation of the topic. Conditionally include extra facts and information related to the topic if it enhances the explanation and would benefit the student's understanding.
+You will generate a well-structured explanation for the given topic. Your response must be in markdown format.
+
+Use the following guidelines for your explanation:
+- Start with a concise introduction.
+- Use headings (#) and subheadings (##) to organize the content into logical sections.
+- Use bullet points (-) or numbered lists (1.) for key concepts, steps, or features.
+- Use bold formatting (**) for important keywords or terms.
+- Keep paragraphs short and focused.
+- End with a summary or concluding thought.
 
 Topic: {{{topic}}}`,
 });

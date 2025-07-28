@@ -31,7 +31,9 @@ export function ExplanationCard({ explanation }: ExplanationCardProps) {
       window.speechSynthesis.cancel();
       setIsSpeaking(false);
     } else {
-      const utterance = new SpeechSynthesisUtterance(explanation);
+      // Remove markdown for smoother speech
+      const textToSpeak = explanation.replace(/#+\s|\*\*/g, '');
+      const utterance = new SpeechSynthesisUtterance(textToSpeak);
       utterance.onend = () => setIsSpeaking(false);
       utterance.onerror = () => {
         setIsSpeaking(false);
@@ -68,14 +70,22 @@ export function ExplanationCard({ explanation }: ExplanationCardProps) {
     : explanation;
 
   const renderExplanation = (text: string) => {
-    const boldRegex = /\*\*(.*?)\*\*/g;
-    const parts = text.split(boldRegex);
-
-    return parts.map((part, index) => {
-      if (index % 2 === 1) {
-        return <strong key={index}>{part}</strong>;
-      }
-      return part;
+    const lines = text.split('\n');
+    return lines.map((line, index) => {
+        if (line.startsWith('### ')) {
+            return <h3 key={index} className="text-lg font-semibold mt-4">{line.substring(4)}</h3>;
+        }
+        if (line.startsWith('## ')) {
+            return <h2 key={index} className="text-xl font-bold mt-6 border-b pb-2">{line.substring(3)}</h2>;
+        }
+        if (line.startsWith('# ')) {
+            return <h1 key={index} className="text-2xl font-bold mt-8 border-b pb-2">{line.substring(2)}</h1>;
+        }
+        if (line.startsWith('- ')) {
+            return <li key={index} className="ml-5">{line.substring(2).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</li>;
+        }
+        const htmlLine = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        return <p key={index} dangerouslySetInnerHTML={{ __html: htmlLine }} />;
     });
   };
 
@@ -85,7 +95,7 @@ export function ExplanationCard({ explanation }: ExplanationCardProps) {
         <CardTitle className="font-headline">Detailed Explanation</CardTitle>
       </CardHeader>
       <CardContent className="prose prose-lg dark:prose-invert max-w-none text-foreground/90">
-        <p>{renderExplanation(textToShow)}</p>
+         <div>{renderExplanation(textToShow)}</div>
       </CardContent>
       <CardFooter className="flex justify-end gap-2">
         <Button variant="outline" onClick={handleTranslate} className="transition-all hover:scale-105">

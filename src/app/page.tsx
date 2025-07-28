@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { BrainCircuit, BookOpen, Layers, Lightbulb, Loader2, ServerCrash, ShieldCheck } from 'lucide-react';
+import { BrainCircuit, BookOpen, Layers, Lightbulb, Loader2, ServerCrash, History, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getExplanation, getQuiz, getFlashcards, type ExplanationContent, type QuizContent, type FlashcardsContent } from '@/app/actions';
 import { TopicForm } from '@/components/topic-form';
@@ -39,12 +39,35 @@ export default function Home() {
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
   const [guestGenerations, setGuestGenerations] = useState(0);
 
+  const [history, setHistory] = useState<string[]>([]);
+
   useEffect(() => {
     const storedCount = localStorage.getItem('guestGenerations');
     if (storedCount) {
       setGuestGenerations(parseInt(storedCount, 10));
     }
+    const storedHistory = localStorage.getItem('learnAiHistory');
+    if (storedHistory) {
+      setHistory(JSON.parse(storedHistory));
+    }
   }, []);
+
+  const updateHistory = (newTopic: string) => {
+    const updatedHistory = [newTopic, ...history.filter(t => t.toLowerCase() !== newTopic.toLowerCase()).slice(0, 19)];
+    setHistory(updatedHistory);
+    localStorage.setItem('learnAiHistory', JSON.stringify(updatedHistory));
+  };
+  
+  const deleteFromHistory = (topicToDelete: string) => {
+    const updatedHistory = history.filter(t => t.toLowerCase() !== topicToDelete.toLowerCase());
+    setHistory(updatedHistory);
+    localStorage.setItem('learnAiHistory', JSON.stringify(updatedHistory));
+  };
+
+  const clearHistory = () => {
+    setHistory([]);
+    localStorage.removeItem('learnAiHistory');
+  };
 
   const handleGuestLimit = () => {
     if (!user) {
@@ -73,7 +96,7 @@ export default function Home() {
     setQuizError(null);
     setFlashcardsError(null);
     setCurrentTopic(topic);
-
+    
     const result = await getExplanation(topic);
     
     if (result.error) {
@@ -85,7 +108,9 @@ export default function Home() {
       });
     } else {
       setExplanationContent(result);
-      handleGuestLimit();
+      if (!handleGuestLimit()) {
+        updateHistory(topic);
+      };
     }
     setIsLoading(false);
   };
@@ -179,6 +204,37 @@ export default function Home() {
             <p className="font-headline text-lg font-semibold">Generation Failed</p>
             <p className="text-center">{error}</p>
           </div>
+        )}
+        
+        {!isLoading && !error && !explanationContent && history.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3 font-headline">
+                <History className="h-6 w-6 text-primary" />
+                Recent Topics
+              </CardTitle>
+              <CardDescription>Click a topic to revisit it or clear your history.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2">
+                {history.map((topic, index) => (
+                  <li key={index} className="flex items-center justify-between gap-4 rounded-md p-2 hover:bg-accent/50">
+                    <button onClick={() => handleGenerateExplanation(topic)} className="flex-grow text-left text-primary hover:underline">
+                      {topic}
+                    </button>
+                    <Button variant="ghost" size="icon" onClick={() => deleteFromHistory(topic)}>
+                      <Trash2 className="h-4 w-4 text-muted-foreground" />
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+            {history.length > 0 && (
+                <CardFooter>
+                    <Button variant="outline" onClick={clearHistory}>Clear History</Button>
+                </CardFooter>
+            )}
+          </Card>
         )}
 
         {explanationContent && !isLoading && !error && (
