@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { BrainCircuit, BookOpen, Layers, Lightbulb, Loader2, ServerCrash, History, Trash2, MessageSquare, User, Bot } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getExplanation, getQuiz, getFlashcards, getReasoning, type ExplanationContent, type QuizContent, type FlashcardsContent, type ReasoningContent } from '@/app/actions';
@@ -42,6 +42,7 @@ export default function Home() {
   const [isReasoningLoading, setIsReasoningLoading] = useState(false);
   const [conversation, setConversation] = useState<ConversationMessage[]>([]);
   const [followUpQuestion, setFollowUpQuestion] = useState('');
+  const conversationContainerRef = useRef<HTMLDivElement>(null);
 
   const { toast } = useToast();
   const { user } = useAuth();
@@ -61,6 +62,12 @@ export default function Home() {
       setHistory(JSON.parse(storedHistory));
     }
   }, []);
+  
+  useEffect(() => {
+    if (conversationContainerRef.current) {
+      conversationContainerRef.current.scrollTop = conversationContainerRef.current.scrollHeight;
+    }
+  }, [conversation]);
 
   const updateHistory = (newTopic: string) => {
     const updatedHistory = [newTopic, ...history.filter(t => t.toLowerCase() !== newTopic.toLowerCase()).slice(0, 19)];
@@ -313,7 +320,7 @@ export default function Home() {
                     <CardContent className="space-y-4">
                         <div className="space-y-4">
                            {conversation.length > 0 && (
-                               <div className="max-h-96 space-y-4 overflow-y-auto rounded-lg border bg-muted/50 p-4">
+                               <div ref={conversationContainerRef} className="max-h-96 space-y-4 overflow-y-auto rounded-lg border bg-muted/50 p-4">
                                    {conversation.map((msg, index) => (
                                        <div key={index} className={`flex items-start gap-3 ${msg.role === 'user' ? 'justify-end' : ''}`}>
                                             {msg.role === 'assistant' && <Bot className="h-6 w-6 shrink-0 text-primary" />}
