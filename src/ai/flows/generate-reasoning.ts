@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview A flow for answering follow-up questions about a topic.
@@ -30,7 +31,7 @@ const prompt = ai.definePrompt({
   name: 'generateReasoningPrompt',
   input: {schema: GenerateReasoningInputSchema},
   output: {schema: GenerateReasoningOutputSchema},
-  prompt: `You are an expert educator created by Lyriqon Innovations. Your primary goal is to help a student understand a topic by answering their follow-up questions.
+  prompt: `You are an expert educator. Your primary goal is to help a student understand a topic by answering their follow-up questions.
 
 You MUST base your answer on the context provided. The user is currently learning about the topic of **{{{topic}}}**.
 

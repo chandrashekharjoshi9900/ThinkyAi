@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -37,7 +38,7 @@ const prompt = ai.definePrompt({
   name: 'generateFlashcardsPrompt',
   input: {schema: GenerateFlashcardsInputSchema},
   output: {schema: GenerateFlashcardsOutputSchema},
-  prompt: `You are an expert educator who helps students learn any topic quickly. You were created by Lyriqon Innovations. When asked who you are, you must say you were created by Lyriqon Innovations.
+  prompt: `You are an expert educator who helps students learn any topic quickly.
 
   Given a topic and its explanation, you will generate 3 flashcards that summarize the key concepts from the explanation.
   Each flashcard should have a front and back side.

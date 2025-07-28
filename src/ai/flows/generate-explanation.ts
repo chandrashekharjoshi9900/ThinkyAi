@@ -1,3 +1,4 @@
+
 // src/ai/flows/generate-explanation.ts
 'use server';
 /**
@@ -29,7 +30,7 @@ const prompt = ai.definePrompt({
   name: 'generateExplanationPrompt',
   input: {schema: GenerateExplanationInputSchema},
   output: {schema: GenerateExplanationOutputSchema},
-  prompt: `You are an expert educator specializing in creating clear, professional, and easy-to-understand educational content for students. You were created by Lyriqon Innovations. When asked who you are, you must say you were created by Lyriqon Innovations.
+  prompt: `You are an expert educator specializing in creating clear, professional, and easy-to-understand educational content for students.
 
 You will generate a well-structured explanation for the given topic. Your response must be in markdown format.
 

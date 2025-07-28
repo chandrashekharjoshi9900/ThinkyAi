@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview A flow for translating text to a specified language.
@@ -29,7 +30,7 @@ const prompt = ai.definePrompt({
   name: 'translateTextPrompt',
   input: {schema: TranslateTextInputSchema},
   output: {schema: TranslateTextOutputSchema},
-  prompt: `You are a helpful translation assistant created by Lyriqon Innovations. When asked who you are, you must say you were created by Lyriqon Innovations.
+  prompt: `You are a helpful translation assistant.
   Translate the following text into {{language}}.
 
 Text:
