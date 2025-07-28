@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { BrainCircuit, BookOpen, Layers, Lightbulb, Loader2, ServerCrash } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { BrainCircuit, BookOpen, Layers, Lightbulb, Loader2, ServerCrash, ShieldCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getExplanation, getQuiz, getFlashcards, type ExplanationContent, type QuizContent, type FlashcardsContent } from '@/app/actions';
 import { TopicForm } from '@/components/topic-form';
@@ -9,9 +9,13 @@ import { ExplanationCard } from '@/components/explanation-card';
 import { QuizCard } from '@/components/quiz-card';
 import { Flashcards } from '@/components/flashcards';
 import { ScrollUpButton } from '@/components/scroll-up-button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useAuth } from '@/components/auth-provider';
+import { AuthDialog } from '@/components/auth-dialog';
+
+const GUEST_LIMIT = 3;
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
@@ -30,8 +34,37 @@ export default function Home() {
   const [flashcardsError, setFlashcardsError] = useState<string | null>(null);
 
   const { toast } = useToast();
+  const { user } = useAuth();
+  
+  const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
+  const [guestGenerations, setGuestGenerations] = useState(0);
+
+  useEffect(() => {
+    const storedCount = localStorage.getItem('guestGenerations');
+    if (storedCount) {
+      setGuestGenerations(parseInt(storedCount, 10));
+    }
+  }, []);
+
+  const handleGuestLimit = () => {
+    if (!user) {
+      const newCount = guestGenerations + 1;
+      setGuestGenerations(newCount);
+      localStorage.setItem('guestGenerations', newCount.toString());
+      if (newCount >= GUEST_LIMIT) {
+        setIsAuthDialogOpen(true);
+        return true; // Limit reached
+      }
+    }
+    return false; // Limit not reached or user is logged in
+  };
 
   const handleGenerateExplanation = async (topic: string) => {
+    if (!user && guestGenerations >= GUEST_LIMIT) {
+        setIsAuthDialogOpen(true);
+        return;
+    }
+
     setIsLoading(true);
     setError(null);
     setExplanationContent(null);
@@ -42,7 +75,7 @@ export default function Home() {
     setCurrentTopic(topic);
 
     const result = await getExplanation(topic);
-
+    
     if (result.error) {
       setError(result.error);
       toast({
@@ -52,12 +85,17 @@ export default function Home() {
       });
     } else {
       setExplanationContent(result);
+      handleGuestLimit();
     }
     setIsLoading(false);
   };
 
   const handleGenerateQuiz = async () => {
     if (!currentTopic) return;
+    if (!user && guestGenerations >= GUEST_LIMIT) {
+        setIsAuthDialogOpen(true);
+        return;
+    }
     setIsQuizLoading(true);
     setQuizError(null);
     setQuizContent(null);
@@ -73,12 +111,18 @@ export default function Home() {
         });
     } else {
         setQuizContent(result);
+        handleGuestLimit();
     }
     setIsQuizLoading(false);
   }
 
   const handleGenerateFlashcards = async () => {
     if (!currentTopic || !explanationContent?.explanation) return;
+    if (!user && guestGenerations >= GUEST_LIMIT) {
+        setIsAuthDialogOpen(true);
+        return;
+    }
+
     setIsFlashcardsLoading(true);
     setFlashcardsError(null);
     setFlashcardsContent(null);
@@ -94,12 +138,16 @@ export default function Home() {
         });
     } else {
         setFlashcardsContent(result);
+        handleGuestLimit();
     }
     setIsFlashcardsLoading(false);
   }
 
+  const remainingGenerations = user ? 'Unlimited' : Math.max(0, GUEST_LIMIT - guestGenerations);
+
   return (
     <div className="container mx-auto max-w-5xl px-4 py-8 md:py-12">
+      <AuthDialog open={isAuthDialogOpen} onOpenChange={setIsAuthDialogOpen} />
       <section className="text-center">
         <h1 className="font-headline text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
           Welcome to <span className="text-primary">LearnAI</span>
@@ -111,6 +159,9 @@ export default function Home() {
 
       <section className="mx-auto mt-12 max-w-2xl">
         <TopicForm onGenerate={handleGenerateExplanation} isLoading={isLoading} />
+        <p className="mt-4 text-center text-sm text-muted-foreground">
+            Generations remaining: <span className="font-bold text-primary">{remainingGenerations}</span>
+        </p>
       </section>
 
       <div className="mt-12 space-y-12">
