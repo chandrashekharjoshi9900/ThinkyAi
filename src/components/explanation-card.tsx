@@ -1,3 +1,4 @@
+// src/components/explanation-card.tsx
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -66,13 +67,25 @@ export function ExplanationCard({ explanation }: ExplanationCardProps) {
     ? 'यह एक नकली अनुवाद है। वास्तविक कार्यक्षमता के लिए एक अनुवाद एपीआई की आवश्यकता होगी। प्रत्येक विषय को सरलता से सीखने के लिए यहां स्पष्टीकरण दिखाई देगा।'
     : explanation;
 
+  const renderExplanation = (text: string) => {
+    const boldRegex = /\*\*(.*?)\*\*/g;
+    const parts = text.split(boldRegex);
+
+    return parts.map((part, index) => {
+      if (index % 2 === 1) {
+        return <strong key={index}>{part}</strong>;
+      }
+      return part;
+    });
+  };
+
   return (
     <Card className="glassmorphism overflow-hidden">
       <CardHeader>
         <CardTitle className="font-headline">Detailed Explanation</CardTitle>
       </CardHeader>
       <CardContent className="prose prose-lg dark:prose-invert max-w-none text-foreground/90">
-        <p>{textToShow}</p>
+        <p>{renderExplanation(textToShow)}</p>
       </CardContent>
       <CardFooter className="flex justify-end gap-2">
         <Button variant="outline" onClick={handleTranslate} className="transition-all hover:scale-105">
