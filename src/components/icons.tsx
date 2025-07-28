@@ -19,10 +19,10 @@ export const Icons = {
         y="21"
         fontFamily="Poppins, sans-serif"
         fontSize="24"
-        fontWeight="300"
+        fontWeight="400"
         fill="hsl(var(--foreground))"
       >
-        Learn<tspan fontWeight="600" fill="hsl(var(--primary))">AI</tspan>
+        LearnAI
       </text>
     </svg>
   ),
