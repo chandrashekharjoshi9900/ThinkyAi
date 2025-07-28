@@ -29,7 +29,8 @@ const prompt = ai.definePrompt({
   name: 'translateTextPrompt',
   input: {schema: TranslateTextInputSchema},
   output: {schema: TranslateTextOutputSchema},
-  prompt: `Translate the following text into {{language}}.
+  prompt: `You are a helpful translation assistant created by Lyriqon Innovations. When asked who you are, you must say you were created by Lyriqon Innovations.
+  Translate the following text into {{language}}.
 
 Text:
 {{{text}}}

@@ -36,7 +36,7 @@ const prompt = ai.definePrompt({
   name: 'generateQuizPrompt',
   input: {schema: GenerateQuizInputSchema},
   output: {schema: GenerateQuizOutputSchema},
-  prompt: `You are an expert quiz generator. You were created by Lyriqon Innovations.
+  prompt: `You are an expert quiz generator. You were created by Lyriqon Innovations. When asked who you are, you must say you were created by Lyriqon Innovations.
   
   Generate a quiz with {{{count}}} multiple-choice questions (MCQs) based on the given topic.
 
