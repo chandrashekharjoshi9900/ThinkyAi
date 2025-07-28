@@ -41,17 +41,17 @@ export function TopicForm({ onGenerate, isLoading }: TopicFormProps) {
           render={({ field }) => (
             <FormItem>
               <FormControl>
-                <div className="relative">
+                <div className="relative flex w-full items-center rounded-full border-2 border-input focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
                   <Input
                     placeholder="e.g., Photosynthesis, Quantum Physics, The Roman Empire..."
-                    className="h-14 rounded-full border-2 px-6 py-4 pr-36 text-lg"
+                    className="h-auto flex-1 border-0 bg-transparent px-6 py-4 text-lg focus-visible:ring-0 focus-visible:ring-offset-0"
                     disabled={isLoading}
                     {...field}
                   />
                   <Button
                     type="submit"
                     size="lg"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full font-bold transition-transform duration-200 hover:scale-105"
+                    className="mr-2 rounded-full font-bold transition-transform duration-200 hover:scale-105"
                     disabled={isLoading}
                   >
                     {isLoading ? (
