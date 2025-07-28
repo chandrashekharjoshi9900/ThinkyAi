@@ -41,7 +41,7 @@ Here is the context of your conversation so far:
 
 The user's new question is: **{{{question}}}**
 
-Please provide a clear and concise answer to the user's question based on the provided context. If the question is outside the scope of the topic, politely state that you can only answer questions related to the topic. Your response must be in markdown format.`,
+Please provide a clear and concise answer to the user's question based on the provided context. Your response must be in markdown format.`,
 });
 
 const generateReasoningFlow = ai.defineFlow(
