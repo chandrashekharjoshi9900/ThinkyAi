@@ -9,7 +9,7 @@ import { ExplanationCard } from '@/components/explanation-card';
 import { QuizCard } from '@/components/quiz-card';
 import { Flashcards } from '@/components/flashcards';
 import { ScrollUpButton } from '@/components/scroll-up-button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/components/auth-provider';
