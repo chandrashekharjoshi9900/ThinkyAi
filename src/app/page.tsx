@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { BrainCircuit, BookOpen, Layers, Lightbulb, Loader2, ServerCrash, History, Trash2 } from 'lucide-react';
+import { BrainCircuit, BookOpen, Layers, Lightbulb, Loader2, ServerCrash, History, Trash2, MessageSquare, User, Bot } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { getExplanation, getQuiz, getFlashcards, type ExplanationContent, type QuizContent, type FlashcardsContent } from '@/app/actions';
+import { getExplanation, getQuiz, getFlashcards, getReasoning, type ExplanationContent, type QuizContent, type FlashcardsContent, type ReasoningContent } from '@/app/actions';
 import { TopicForm } from '@/components/topic-form';
 import { ExplanationCard } from '@/components/explanation-card';
 import { QuizCard } from '@/components/quiz-card';
@@ -14,8 +14,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/components/auth-provider';
 import { AuthDialog } from '@/components/auth-dialog';
+import { Textarea } from '@/components/ui/textarea';
 
 const GUEST_LIMIT = 3;
+
+type ConversationMessage = {
+  role: 'user' | 'assistant';
+  content: string;
+}
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
@@ -32,6 +38,10 @@ export default function Home() {
   const [isFlashcardsLoading, setIsFlashcardsLoading] = useState(false);
   const [flashcardsContent, setFlashcardsContent] = useState<FlashcardsContent | null>(null);
   const [flashcardsError, setFlashcardsError] = useState<string | null>(null);
+
+  const [isReasoningLoading, setIsReasoningLoading] = useState(false);
+  const [conversation, setConversation] = useState<ConversationMessage[]>([]);
+  const [followUpQuestion, setFollowUpQuestion] = useState('');
 
   const { toast } = useToast();
   const { user } = useAuth();
@@ -96,6 +106,8 @@ export default function Home() {
     setQuizError(null);
     setFlashcardsError(null);
     setCurrentTopic(topic);
+    setConversation([]);
+    setFollowUpQuestion('');
     
     const result = await getExplanation(topic);
     
@@ -167,6 +179,49 @@ export default function Home() {
     }
     setIsFlashcardsLoading(false);
   }
+
+  const handleReasoning = async () => {
+    if (!followUpQuestion.trim() || !explanationContent?.explanation) return;
+     if (!user && guestGenerations >= GUEST_LIMIT) {
+        setIsAuthDialogOpen(true);
+        return;
+    }
+    
+    setIsReasoningLoading(true);
+    
+    const userMessage: ConversationMessage = { role: 'user', content: followUpQuestion };
+    setConversation(prev => [...prev, userMessage]);
+    
+    const context = `Original Explanation: ${explanationContent.explanation}\n\nConversation History:\n${conversation.map(m => `${m.role}: ${m.content}`).join('\n')}`;
+    
+    const result = await getReasoning(currentTopic, context, followUpQuestion);
+    setFollowUpQuestion('');
+
+    if(result.error) {
+        const errorMessage: ConversationMessage = { role: 'assistant', content: `Sorry, an error occurred: ${result.error}` };
+        setConversation(prev => [...prev, errorMessage]);
+         toast({
+            variant: 'destructive',
+            title: 'Follow-up Failed',
+            description: result.error,
+        });
+    } else {
+        const assistantMessage: ConversationMessage = { role: 'assistant', content: result.answer };
+        setConversation(prev => [...prev, assistantMessage]);
+        handleGuestLimit();
+    }
+
+    setIsReasoningLoading(false);
+  };
+
+  const renderMarkdown = (text: string) => {
+    const html = text
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      .replace(/`(.*?)`/g, '<code>$1</code>')
+      .replace(/(\n)/g, '<br />');
+    return <div dangerouslySetInnerHTML={{ __html: html }} />;
+  };
 
   const remainingGenerations = user ? 'Unlimited' : Math.max(0, GUEST_LIMIT - guestGenerations);
 
@@ -245,6 +300,55 @@ export default function Home() {
                 AI Explanation
               </h2>
               <ExplanationCard explanation={explanationContent.explanation} />
+            </section>
+            
+            <section id="reasoning">
+                 <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-3 font-headline">
+                            <MessageSquare className="h-6 w-6 text-primary" />
+                            Ask a Follow-up Question
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="space-y-4">
+                           {conversation.length > 0 && (
+                               <div className="max-h-96 space-y-4 overflow-y-auto rounded-lg border bg-muted/50 p-4">
+                                   {conversation.map((msg, index) => (
+                                       <div key={index} className={`flex items-start gap-3 ${msg.role === 'user' ? 'justify-end' : ''}`}>
+                                            {msg.role === 'assistant' && <Bot className="h-6 w-6 shrink-0 text-primary" />}
+                                            <div className={`rounded-lg p-3 ${msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-background'}`}>
+                                               {renderMarkdown(msg.content)}
+                                            </div>
+                                            {msg.role === 'user' && <User className="h-6 w-6 shrink-0 text-primary" />}
+                                       </div>
+                                   ))}
+                                    {isReasoningLoading && (
+                                      <div className="flex items-start gap-3">
+                                          <Bot className="h-6 w-6 shrink-0 text-primary" />
+                                          <div className="rounded-lg bg-background p-3">
+                                               <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                                          </div>
+                                      </div>
+                                    )}
+                               </div>
+                           )}
+                           <div className="flex items-start gap-4">
+                                <Textarea 
+                                    placeholder="e.g., Can you explain that in simpler terms?"
+                                    value={followUpQuestion}
+                                    onChange={e => setFollowUpQuestion(e.target.value)}
+                                    onKeyDown={e => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleReasoning(); }}}
+                                    className="flex-grow"
+                                    disabled={isReasoningLoading}
+                                />
+                                <Button onClick={handleReasoning} disabled={isReasoningLoading || !followUpQuestion.trim()}>
+                                    {isReasoningLoading ? <Loader2 className="h-4 w-4 animate-spin"/> : "Send"}
+                                </Button>
+                           </div>
+                        </div>
+                    </CardContent>
+                </Card>
             </section>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

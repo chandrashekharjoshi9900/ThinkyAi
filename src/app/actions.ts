@@ -4,6 +4,8 @@ import { generateExplanation, type GenerateExplanationOutput } from '@/ai/flows/
 import { generateQuiz, type GenerateQuizOutput } from '@/ai/flows/generate-quiz';
 import { generateFlashcards, type GenerateFlashcardsOutput } from '@/ai/flows/generate-flashcards';
 import { translateText, type TranslateTextOutput } from '@/ai/flows/translate-text';
+import { generateReasoning, type GenerateReasoningOutput } from '@/ai/flows/generate-reasoning';
+
 
 export type ExplanationContent = {
     explanation: GenerateExplanationOutput['explanation'];
@@ -17,11 +19,15 @@ export type FlashcardsContent = {
 export type TranslationContent = {
     translatedText: TranslateTextOutput['translatedText'];
 }
+export type ReasoningContent = {
+    answer: GenerateReasoningOutput['answer'];
+}
 
 type ExplanationActionResult = { error?: string } & ExplanationContent;
 type QuizActionResult = { error?: string } & QuizContent;
 type FlashcardsActionResult = { error?: string } & FlashcardsContent;
 type TranslationActionResult = { error?: string } & TranslationContent;
+type ReasoningActionResult = { error?: string } & ReasoningContent;
 
 
 export async function getExplanation(topic: string): Promise<ExplanationActionResult> {
@@ -116,5 +122,26 @@ export async function getTranslation(text: string, language: string): Promise<Tr
     } catch (e) {
         console.error("Error translating text:", e);
         return { error: 'An unexpected error occurred while translating. Please try again later.' };
+    }
+}
+
+export async function getReasoning(topic: string, context: string, question: string): Promise<ReasoningActionResult> {
+    if (!topic) return { error: 'Invalid topic.' };
+    if (!context) return { error: 'Invalid context.' };
+    if (!question || question.trim().length < 2) {
+        return { error: 'Please enter a valid question.' };
+    }
+
+    try {
+        const result = await generateReasoning({ topic, context, question });
+        if (!result.answer) {
+            return { error: 'Failed to get an answer.' };
+        }
+        return {
+            answer: result.answer,
+        };
+    } catch (e) {
+        console.error("Error generating reasoning:", e);
+        return { error: 'An unexpected error occurred while getting an answer. Please try again later.' };
     }
 }
