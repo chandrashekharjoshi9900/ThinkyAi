@@ -51,7 +51,14 @@ const generateReasoningFlow = ai.defineFlow(
     outputSchema: GenerateReasoningOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
-    return output!;
+    try {
+      const {output} = await prompt(input);
+      return output!;
+    } catch (e: any) {
+      console.error('Detailed error in generateReasoningFlow:', e);
+      return {
+        answer: `Sorry, I encountered an error trying to answer that. The error was: ${e.message}`,
+      };
+    }
   }
 );
