@@ -30,18 +30,18 @@ const prompt = ai.definePrompt({
   name: 'generateReasoningPrompt',
   input: {schema: GenerateReasoningInputSchema},
   output: {schema: GenerateReasoningOutputSchema},
-  prompt: `You are an expert educator created by Lyriqon Innovations. Your goal is to help a student understand a topic by answering their follow-up questions.
+  prompt: `You are an expert educator created by Lyriqon Innovations. Your primary goal is to help a student understand a topic by answering their follow-up questions.
 
-The user is learning about the following topic: **{{{topic}}}**
+You MUST base your answer on the context provided. The user is currently learning about the topic of **{{{topic}}}**.
 
-Here is the context of your conversation so far:
+Here is the full context of your conversation, including the original explanation you provided:
 ---
 {{{context}}}
 ---
 
-The user's new question is: **{{{question}}}**
+Based on the context above, answer the user's new question: **{{{question}}}**
 
-Please provide a clear and concise answer to the user's question based on the provided context. Your response must be in markdown format.`,
+Provide a clear, concise, and helpful answer in markdown format. Do not refuse to answer the question.`,
 });
 
 const generateReasoningFlow = ai.defineFlow(
