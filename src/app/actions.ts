@@ -3,6 +3,7 @@
 import { generateExplanation, type GenerateExplanationOutput } from '@/ai/flows/generate-explanation';
 import { generateQuiz, type GenerateQuizOutput } from '@/ai/flows/generate-quiz';
 import { generateFlashcards, type GenerateFlashcardsOutput } from '@/ai/flows/generate-flashcards';
+import { translateText, type TranslateTextOutput } from '@/ai/flows/translate-text';
 
 export type ExplanationContent = {
     explanation: GenerateExplanationOutput['explanation'];
@@ -13,11 +14,14 @@ export type QuizContent = {
 export type FlashcardsContent = {
     flashcards: GenerateFlashcardsOutput['flashcards'];
 }
-
+export type TranslationContent = {
+    translatedText: TranslateTextOutput['translatedText'];
+}
 
 type ExplanationActionResult = { error?: string } & ExplanationContent;
 type QuizActionResult = { error?: string } & QuizContent;
 type FlashcardsActionResult = { error?: string } & FlashcardsContent;
+type TranslationActionResult = { error?: string } & TranslationContent;
 
 
 export async function getExplanation(topic: string): Promise<ExplanationActionResult> {
@@ -91,5 +95,26 @@ export async function getFlashcards(topic: string, explanation: string): Promise
     } catch (e) {
         console.error("Error generating flashcards:", e);
         return { error: 'An unexpected error occurred while generating flashcards. Please try again later.' };
+    }
+}
+
+export async function getTranslation(text: string, language: string): Promise<TranslationActionResult> {
+    if (!text) {
+        return { error: 'Text to translate is required.' };
+    }
+    if (!language) {
+        return { error: 'Target language is required.' };
+    }
+    try {
+        const result = await translateText({ text, language });
+        if (!result.translatedText) {
+            return { error: 'Failed to translate text.' };
+        }
+        return {
+            translatedText: result.translatedText,
+        };
+    } catch (e) {
+        console.error("Error translating text:", e);
+        return { error: 'An unexpected error occurred while translating. Please try again later.' };
     }
 }
