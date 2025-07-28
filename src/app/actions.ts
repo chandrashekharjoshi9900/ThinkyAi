@@ -4,18 +4,23 @@ import { generateExplanation, type GenerateExplanationOutput } from '@/ai/flows/
 import { generateQuiz, type GenerateQuizOutput } from '@/ai/flows/generate-quiz';
 import { generateFlashcards, type GenerateFlashcardsOutput } from '@/ai/flows/generate-flashcards';
 
-export type LearningContent = {
+export type ExplanationContent = {
     explanation: GenerateExplanationOutput['explanation'];
+}
+export type QuizContent = {
     quiz: GenerateQuizOutput['questions'];
+}
+export type FlashcardsContent = {
     flashcards: GenerateFlashcardsOutput['flashcards'];
 }
 
-type ActionResult = {
-    error?: string;
-} & LearningContent | { error: string };
+
+type ExplanationActionResult = { error?: string } & ExplanationContent;
+type QuizActionResult = { error?: string } & QuizContent;
+type FlashcardsActionResult = { error?: string } & FlashcardsContent;
 
 
-export async function getLearningContent(topic: string): Promise<ActionResult> {
+export async function getExplanation(topic: string): Promise<ExplanationActionResult> {
     if (!topic || topic.trim().length < 3) {
         return { error: 'Please enter a valid topic (at least 3 characters).' };
     }
@@ -27,24 +32,64 @@ export async function getLearningContent(topic: string): Promise<ActionResult> {
         if (!explanation) {
             return { error: 'Failed to generate an explanation for this topic.' };
         }
+        
+        return {
+            explanation
+        };
 
-        const [quizResult, flashcardsResult] = await Promise.all([
-            generateQuiz({ topic }),
-            generateFlashcards({ topic, explanation })
-        ]);
+    } catch (e) {
+        console.error("Error generating explanation:", e);
+        return { error: 'An unexpected error occurred while generating content. Please try again later.' };
+    }
+}
 
-        if (!quizResult?.questions?.length || !flashcardsResult?.flashcards?.length) {
-            return { error: 'Failed to generate learning materials. Please try a different topic.' };
+export async function getQuiz(topic: string, count: number): Promise<QuizActionResult> {
+     if (!topic || topic.trim().length < 3) {
+        return { error: 'Invalid topic.' };
+    }
+    if(count < 1 || count > 10){
+        return { error: 'Number of questions must be between 1 and 10.' };
+    }
+
+    try {
+        const quizResult = await generateQuiz({ topic, count });
+
+        if (!quizResult?.questions?.length) {
+            return { error: 'Failed to generate quiz. Please try a different topic.' };
         }
 
         return {
-            explanation,
-            quiz: quizResult.questions,
+            quiz: quizResult.questions
+        };
+
+    } catch (e) {
+        console.error("Error generating quiz:", e);
+        return { error: 'An unexpected error occurred while generating quiz. Please try again later.' };
+    }
+}
+
+
+export async function getFlashcards(topic: string, explanation: string): Promise<FlashcardsActionResult> {
+     if (!topic || topic.trim().length < 3) {
+        return { error: 'Invalid topic.' };
+    }
+     if (!explanation) {
+        return { error: 'Explanation is required to generate flashcards.' };
+    }
+
+    try {
+        const flashcardsResult = await generateFlashcards({ topic, explanation });
+
+        if (!flashcardsResult?.flashcards?.length) {
+            return { error: 'Failed to generate flashcards. Please try a different topic.' };
+        }
+
+        return {
             flashcards: flashcardsResult.flashcards,
         };
 
     } catch (e) {
-        console.error("Error generating learning content:", e);
-        return { error: 'An unexpected error occurred while generating content. Please try again later.' };
+        console.error("Error generating flashcards:", e);
+        return { error: 'An unexpected error occurred while generating flashcards. Please try again later.' };
     }
 }
