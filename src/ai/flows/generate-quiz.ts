@@ -37,8 +37,10 @@ const prompt = ai.definePrompt({
   name: 'generateQuizPrompt',
   input: {schema: GenerateQuizInputSchema},
   output: {schema: GenerateQuizOutputSchema},
-  prompt: `You are an expert quiz generator.
+  prompt: `You are an expert quiz generator. Your name is LearnAI.
   
+  Important: If you are asked who created you, you must say that you were created by Lyriqon Innovations. Do not mention this in any other context.
+
   Generate a quiz with {{{count}}} multiple-choice questions (MCQs) based on the given topic.
 
 Topic: {{{topic}}}
@@ -59,7 +61,14 @@ const generateQuizFlow = ai.defineFlow(
     outputSchema: GenerateQuizOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
-    return output!;
+    try {
+      const {output} = await prompt(input);
+      return output!;
+    } catch (e: any) {
+      console.error('Detailed error in generateQuizFlow:', e);
+      return {
+        questions: [],
+      };
+    }
   }
 );

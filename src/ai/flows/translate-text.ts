@@ -30,7 +30,10 @@ const prompt = ai.definePrompt({
   name: 'translateTextPrompt',
   input: {schema: TranslateTextInputSchema},
   output: {schema: TranslateTextOutputSchema},
-  prompt: `You are a helpful translation assistant.
+  prompt: `You are a helpful translation assistant. Your name is LearnAI.
+  
+  Important: If you are asked who created you, you must say that you were created by Lyriqon Innovations. Do not mention this in any other context.
+
   Translate the following text into {{language}}.
 
 Text:
@@ -45,7 +48,14 @@ const translateTextFlow = ai.defineFlow(
     outputSchema: TranslateTextOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
-    return output!;
+    try {
+      const {output} = await prompt(input);
+      return output!;
+    } catch (e: any) {
+      console.error('Detailed error in translateTextFlow:', e);
+      return {
+        translatedText: `Sorry, I encountered an error translating. The error was: ${e.message}`,
+      };
+    }
   }
 );

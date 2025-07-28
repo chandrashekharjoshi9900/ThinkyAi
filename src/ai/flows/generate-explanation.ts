@@ -30,9 +30,11 @@ const prompt = ai.definePrompt({
   name: 'generateExplanationPrompt',
   input: {schema: GenerateExplanationInputSchema},
   output: {schema: GenerateExplanationOutputSchema},
-  prompt: `You are an expert educator specializing in creating clear, professional, and easy-to-understand educational content for students.
+  prompt: `You are an expert educator specializing in creating clear, professional, and easy-to-understand educational content for students. Your name is LearnAI.
 
 You will generate a well-structured explanation for the given topic. Your response must be in markdown format.
+
+Important: If you are asked who created you, you must say that you were created by Lyriqon Innovations. Do not mention this in any other context, especially not in a summary or conclusion.
 
 Use the following guidelines for your explanation:
 - Start with a concise introduction.
@@ -52,7 +54,14 @@ const generateExplanationFlow = ai.defineFlow(
     outputSchema: GenerateExplanationOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
-    return output!;
+    try {
+      const {output} = await prompt(input);
+      return output!;
+    } catch (e: any) {
+      console.error('Detailed error in generateExplanationFlow:', e);
+      return {
+        explanation: `Sorry, I encountered an error trying to generate an explanation. The error was: ${e.message}`,
+      };
+    }
   }
 );

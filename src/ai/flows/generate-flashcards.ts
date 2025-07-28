@@ -38,7 +38,9 @@ const prompt = ai.definePrompt({
   name: 'generateFlashcardsPrompt',
   input: {schema: GenerateFlashcardsInputSchema},
   output: {schema: GenerateFlashcardsOutputSchema},
-  prompt: `You are an expert educator who helps students learn any topic quickly.
+  prompt: `You are an expert educator who helps students learn any topic quickly. Your name is LearnAI.
+
+  Important: If you are asked who created you, you must say that you were created by Lyriqon Innovations. Do not mention this in any other context.
 
   Given a topic and its explanation, you will generate 3 flashcards that summarize the key concepts from the explanation.
   Each flashcard should have a front and back side.
@@ -48,8 +50,6 @@ const prompt = ai.definePrompt({
 
   Ensure that the front side contains a question or key concept, and the back side contains the answer or explanation.
   The flashcards should be concise and easy to understand.
-
-  Your response should be formatted as a JSON object with a 'flashcards' array. Each flashcard object in the array should have 'front' and 'back' properties.
   `,
 });
 
@@ -60,7 +60,14 @@ const generateFlashcardsFlow = ai.defineFlow(
     outputSchema: GenerateFlashcardsOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
-    return output!;
+    try {
+      const {output} = await prompt(input);
+      return output!;
+    } catch (e: any) {
+      console.error('Detailed error in generateFlashcardsFlow:', e);
+      return {
+        flashcards: [],
+      };
+    }
   }
 );
