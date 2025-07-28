@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useForm, type SubmitHandler } from 'react-hook-form';
@@ -43,7 +44,7 @@ export function TopicForm({ onGenerate, isLoading }: TopicFormProps) {
                 <div className="relative">
                   <Input
                     placeholder="e.g., Photosynthesis, Quantum Physics, The Roman Empire..."
-                    className="h-14 rounded-full border-2 px-6 py-4 text-lg"
+                    className="h-14 rounded-full border-2 px-6 py-4 pr-36 text-lg"
                     disabled={isLoading}
                     {...field}
                   />
