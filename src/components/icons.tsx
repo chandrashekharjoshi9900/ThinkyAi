@@ -19,7 +19,7 @@ export const Icons = {
         y="21"
         fontFamily="Poppins, sans-serif"
         fontSize="24"
-        fontWeight="600"
+        fontWeight="400"
         fill="hsl(var(--foreground))"
       >
         LearnAI
