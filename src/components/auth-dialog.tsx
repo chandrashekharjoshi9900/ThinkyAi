@@ -1,4 +1,3 @@
-
 // src/components/auth-dialog.tsx
 'use client';
 
@@ -28,11 +27,22 @@ interface AuthDialogProps {
 }
 
 const blockedDomains = [
-  'mailinator.com',
-  'temp-mail.org',
-  'yopmail.com',
-  '10minutemail.com',
-  'guerrillamail.com',
+  "mailinator.com",
+  "temp-mail.org",
+  "yopmail.com",
+  "10minutemail.com",
+  "guerrillamail.com",
+  "throwawaymail.com",
+  "getnada.com",
+  "maildrop.cc",
+  "inboxalias.com",
+  "tempmail.com",
+  "dispostable.com",
+  "mohmal.com",
+  "trashmail.com",
+  "emailondeck.com",
+  "tempinbox.com",
+  "mail.tm"
 ];
 
 export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
@@ -50,7 +60,7 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
     if (isSignUp) {
       const domain = email.split('@')[1];
       if (blockedDomains.includes(domain)) {
-        setError('Kripya ek temporary email ka upyog na karein. Dusra email chunein.');
+        setError('Temporary emails are not allowed. Please use a permanent email address.');
         setIsLoading(false);
         return;
       }
@@ -68,7 +78,7 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
     } catch (err: any) {
       // Catch specific Firebase error for blocked emails from the Cloud Function
       if (err.code === 'auth/invalid-argument') {
-         setError('Kripya ek temporary email ka upyog na karein. Email se sign up karein.');
+         setError('Temporary emails are not allowed. Please use a permanent email address.');
       } else {
          setError(err.message);
       }

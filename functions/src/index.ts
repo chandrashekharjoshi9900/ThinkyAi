@@ -17,6 +17,17 @@ const blockedDomains = [
   "yopmail.com",
   "10minutemail.com",
   "guerrillamail.com",
+  "throwawaymail.com",
+  "getnada.com",
+  "maildrop.cc",
+  "inboxalias.com",
+  "tempmail.com",
+  "dispostable.com",
+  "mohmal.com",
+  "trashmail.com",
+  "emailondeck.com",
+  "tempinbox.com",
+  "mail.tm"
 ];
 
 export const blocktemporaryemails = beforeUserCreated((event) => {
@@ -29,7 +40,7 @@ export const blocktemporaryemails = beforeUserCreated((event) => {
       // Throw an error to block account creation.
       throw new HttpsError(
         "invalid-argument",
-        "Kripya ek temporary email ka upyog na karein. Email se sign up karein.",
+        "Temporary emails are not allowed. Please use a permanent email address.",
       );
     }
   }
