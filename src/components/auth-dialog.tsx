@@ -6,8 +6,6 @@ import { useState } from 'react';
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  GoogleAuthProvider,
-  signInWithPopup,
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
@@ -23,7 +21,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2 } from 'lucide-react';
-import { Separator } from './ui/separator';
 
 interface AuthDialogProps {
   open: boolean;
@@ -44,21 +41,6 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
-
-  const handleGoogleSignIn = async () => {
-    setIsLoading(true);
-    setError(null);
-    const provider = new GoogleAuthProvider();
-    try {
-      await signInWithPopup(auth, provider);
-      toast({ title: 'Success', description: 'Logged in with Google successfully!' });
-      onOpenChange(false);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleAuth = async (isSignUp: boolean) => {
     setIsLoading(true);
@@ -120,20 +102,7 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
             <TabsTrigger value="signup" onClick={resetState}>Sign Up</TabsTrigger>
           </TabsList>
           
-          <div className="py-4 space-y-4">
-              <Button onClick={handleGoogleSignIn} variant="outline" className="w-full" disabled={isLoading}>
-                 {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                 Continue with Google
-              </Button>
-
-              <div className="flex items-center">
-                <Separator className="flex-1" />
-                <span className="px-4 text-xs text-muted-foreground">OR</span>
-                <Separator className="flex-1" />
-              </div>
-          </div>
-
-          <TabsContent value="login">
+          <TabsContent value="login" className="pt-4">
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="login-email">Email</Label>
@@ -163,7 +132,7 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
               </Button>
             </div>
           </TabsContent>
-          <TabsContent value="signup">
+          <TabsContent value="signup" className="pt-4">
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="signup-email">Email</Label>
