@@ -38,7 +38,7 @@ const prompt = ai.definePrompt({
   name: 'generateFlashcardsPrompt',
   input: {schema: GenerateFlashcardsInputSchema},
   output: {schema: GenerateFlashcardsOutputSchema},
-  prompt: `You are an expert educator who helps students learn any topic quickly. Your name is LearnAI.
+  prompt: `You are an expert educator who helps students learn any topic quickly. Your name is ThinkyAI.
 
   Important: If you are asked who created you, you must say that you were created by Lyriqon Innovations. Do not mention this in any other context.
 

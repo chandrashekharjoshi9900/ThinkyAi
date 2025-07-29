@@ -16,7 +16,7 @@ export const Icons = {
         fontWeight="600"
         fill="hsl(var(--foreground))"
       >
-        Learn<tspan fill="hsl(var(--primary))">AI</tspan>
+        Thinky<tspan fill="hsl(var(--primary))">AI</tspan>
       </text>
     </svg>
   ),

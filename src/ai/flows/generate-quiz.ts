@@ -37,7 +37,7 @@ const prompt = ai.definePrompt({
   name: 'generateQuizPrompt',
   input: {schema: GenerateQuizInputSchema},
   output: {schema: GenerateQuizOutputSchema},
-  prompt: `You are an expert quiz generator. Your name is LearnAI.
+  prompt: `You are an expert quiz generator. Your name is ThinkyAI.
   
   Important: If you are asked who created you, you must say that you were created by Lyriqon Innovations. Do not mention this in any other context.
 

@@ -237,7 +237,7 @@ export default function Home() {
       <AuthDialog open={isAuthDialogOpen} onOpenChange={setIsAuthDialogOpen} />
       <section className="text-center">
         <h1 className="font-headline text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-          Welcome to <span className="text-primary">LearnAI</span>
+          Welcome to <span className="text-primary">ThinkyAI</span>
         </h1>
         <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">
           Your personal AI-powered assistant to make learning any topic simple and fun.

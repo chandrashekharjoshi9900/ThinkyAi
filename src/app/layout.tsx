@@ -8,7 +8,7 @@ import './globals.css';
 import { AuthProvider } from '@/components/auth-provider';
 
 export const metadata: Metadata = {
-  title: 'LearnAI - Your Interactive Learning Assistant',
+  title: 'ThinkyAI - Your Interactive Learning Assistant',
   description:
     'Enter any topic and get AI-generated explanations, quizzes, and flashcards to supercharge your learning.',
 };

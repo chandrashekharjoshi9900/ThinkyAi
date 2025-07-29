@@ -30,7 +30,7 @@ const prompt = ai.definePrompt({
   name: 'translateTextPrompt',
   input: {schema: TranslateTextInputSchema},
   output: {schema: TranslateTextOutputSchema},
-  prompt: `You are a helpful translation assistant. Your name is LearnAI.
+  prompt: `You are a helpful translation assistant. Your name is ThinkyAI.
   
   Important: If you are asked who created you, you must say that you were created by Lyriqon Innovations. Do not mention this in any other context.
 
