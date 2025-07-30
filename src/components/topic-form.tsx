@@ -7,14 +7,16 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormMessage, FormLabel } from '@/components/ui/form';
 import { Sparkles, Loader2, Image as ImageIcon, X } from 'lucide-react';
 import Image from 'next/image';
+import { Switch } from '@/components/ui/switch';
 
 
 const formSchema = z.object({
   topic: z.string().min(3, { message: 'Topic must be at least 3 characters long.' }),
   image: z.instanceof(FileList).optional(),
+  deepThink: z.boolean().default(false),
 });
 
 export type FormValues = z.infer<typeof formSchema>;
@@ -33,6 +35,7 @@ export function TopicForm({ onGenerate, isLoading }: TopicFormProps) {
     defaultValues: {
       topic: '',
       image: undefined,
+      deepThink: false,
     },
   });
 
@@ -145,6 +148,29 @@ export function TopicForm({ onGenerate, isLoading }: TopicFormProps) {
             </div>
         )}
 
+        <FormField
+          control={form.control}
+          name="deepThink"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-center justify-center gap-4 rounded-lg border p-3">
+              <div className="space-y-0.5">
+                <FormLabel className="text-base">
+                  Deep Think
+                </FormLabel>
+                <p className="text-sm text-muted-foreground">
+                  Enable for more comprehensive and detailed answers.
+                </p>
+              </div>
+              <FormControl>
+                <Switch
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                  disabled={isLoading}
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
       </form>
     </Form>
   );

@@ -15,6 +15,7 @@ import {z} from 'genkit';
 const GenerateExplanationInputSchema = z.object({
   topic: z.string().describe('The topic to generate an explanation for.'),
   imageDataUri: z.string().optional().describe("An optional image of the topic, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."),
+  deepThink: z.boolean().optional().describe('When true, the AI should use a more intensive thinking process to generate a more comprehensive answer.'),
 });
 export type GenerateExplanationInput = z.infer<typeof GenerateExplanationInputSchema>;
 
@@ -35,8 +36,21 @@ const prompt = ai.definePrompt({
 
 You must first analyze the user's topic to determine if it requires a detailed explanation or if it's a simple, factual question.
 
+{{#if deepThink}}
+//-- DEEP THINK MODE ENABLED --//
+You must follow a two-step process to generate the answer.
+
+**Step 1: Internal Monologue (Chain of Thought)**
+- First, generate a comprehensive list of key concepts, sub-topics, historical context, and related questions about the user's topic. This is your internal "research" phase. Do not show this to the user.
+
+**Step 2: Synthesize and Explain**
+- Based on your internal research from Step 1, structure a detailed, well-organized, and comprehensive explanation in markdown.
+- Your explanation should cover the topic from multiple angles, ensuring a deep and thorough understanding for the user.
+{{else}}
+//-- STANDARD MODE --//
 1.  **For complex topics or questions that need an explanation** (e.g., "Explain photosynthesis", "What is quantum mechanics?"), provide a well-structured, detailed answer in markdown.
 2.  **For simple, factual questions** (e.g., "What is the capital of India?", "How tall is Mount Everest?"), provide a short, direct answer without extra formatting.
+{{/if}}
 
 Important: If you are asked who created you, you must say that you were created by Lyriqon Innovations. Do not mention this in any other context, especially not in a summary or conclusion.
 

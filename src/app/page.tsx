@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -111,7 +112,7 @@ export default function Home() {
     });
   }
 
-  const handleGenerateExplanation = async ({topic, image}: FormValues) => {
+  const handleGenerateExplanation = async ({topic, image, deepThink}: FormValues) => {
     if (!user && guestGenerations >= GUEST_LIMIT) {
         setIsAuthDialogOpen(true);
         return;
@@ -143,7 +144,7 @@ export default function Home() {
         setImagePreview(null);
     }
     
-    const result = await getExplanation(topic, imageDataUri);
+    const result = await getExplanation(topic, imageDataUri, deepThink);
     
     if (result.error) {
       setError(result.error);
@@ -162,7 +163,7 @@ export default function Home() {
   };
   
   const handleHistoryGenerate = (topic: string) => {
-      handleGenerateExplanation({topic, image: undefined});
+      handleGenerateExplanation({topic, image: undefined, deepThink: false});
   }
 
   const handleGenerateQuiz = async () => {

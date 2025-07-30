@@ -1,3 +1,4 @@
+
 'use server';
 
 import { generateExplanation, type GenerateExplanationOutput } from '@/ai/flows/generate-explanation';
@@ -30,13 +31,13 @@ type TranslationActionResult = { error?: string } & TranslationContent;
 type ReasoningActionResult = { error?: string } & ReasoningContent;
 
 
-export async function getExplanation(topic: string, imageDataUri?: string): Promise<ExplanationActionResult> {
+export async function getExplanation(topic: string, imageDataUri?: string, deepThink?: boolean): Promise<ExplanationActionResult> {
     if (!topic || topic.trim().length < 3) {
         return { error: 'Please enter a valid topic (at least 3 characters).' };
     }
 
     try {
-        const explanationResult = await generateExplanation({ topic, imageDataUri });
+        const explanationResult = await generateExplanation({ topic, imageDataUri, deepThink });
         const explanation = explanationResult.explanation;
 
         if (!explanation) {
