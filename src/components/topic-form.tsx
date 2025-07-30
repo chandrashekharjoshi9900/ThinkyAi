@@ -46,8 +46,13 @@ export function TopicForm({ onGenerate, isLoading }: TopicFormProps) {
   };
   
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
+    const files = event.target.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      // Set the file list in the form
+      form.setValue('image', files);
+      
+      // Create and set the preview
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
@@ -75,7 +80,7 @@ export function TopicForm({ onGenerate, isLoading }: TopicFormProps) {
                 <FormItem className="flex-grow">
                   <FormControl>
                       <Input
-                        placeholder="e.g., Photosynthesis, Quantum Physics, or describe an image..."
+                        placeholder="e.g., Photosynthesis, or describe an image..."
                         className="h-auto flex-1 border-0 bg-transparent px-6 py-4 text-lg focus-visible:ring-0 focus-visible:ring-offset-0"
                         disabled={isLoading}
                         {...field}
@@ -85,26 +90,13 @@ export function TopicForm({ onGenerate, isLoading }: TopicFormProps) {
               )}
             />
             
-             <FormField
-                control={form.control}
-                name="image"
-                render={({ field: { onChange, value, ...rest } }) => (
-                    <FormItem>
-                        <FormControl>
-                             <Input 
-                                type="file" 
-                                accept="image/*" 
-                                className="hidden"
-                                ref={imageInputRef}
-                                onChange={(e) => {
-                                    onChange(e.target.files);
-                                    handleImageChange(e);
-                                }}
-                                {...rest}
-                            />
-                        </FormControl>
-                    </FormItem>
-                )}
+            {/* Hidden File Input - managed directly */}
+            <Input 
+                type="file" 
+                accept="image/*" 
+                className="hidden"
+                ref={imageInputRef}
+                onChange={handleImageChange}
             />
 
             <Button
