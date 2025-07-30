@@ -11,6 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormMessage, FormLabel } from '
 import { Sparkles, Loader2, Image as ImageIcon, X } from 'lucide-react';
 import Image from 'next/image';
 import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
 
 
 const formSchema = z.object({
@@ -52,10 +53,8 @@ export function TopicForm({ onGenerate, isLoading }: TopicFormProps) {
     const files = event.target.files;
     if (files && files.length > 0) {
       const file = files[0];
-      // Set the file list in the form
       form.setValue('image', files);
       
-      // Create and set the preview
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
@@ -75,16 +74,16 @@ export function TopicForm({ onGenerate, isLoading }: TopicFormProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <div className="relative flex w-full items-center rounded-full border-2 border-input focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+        <div className="rounded-2xl border bg-background p-2 shadow-sm focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background">
             <FormField
               control={form.control}
               name="topic"
               render={({ field }) => (
-                <FormItem className="flex-grow">
+                <FormItem>
                   <FormControl>
-                      <Input
+                      <Textarea
                         placeholder="e.g., Photosynthesis, or describe an image..."
-                        className="h-auto flex-1 border-0 bg-transparent px-6 py-4 text-lg focus-visible:ring-0 focus-visible:ring-offset-0"
+                        className="min-h-[60px] resize-none border-0 bg-transparent p-4 text-base shadow-none focus-visible:ring-0"
                         disabled={isLoading}
                         {...field}
                       />
@@ -93,44 +92,48 @@ export function TopicForm({ onGenerate, isLoading }: TopicFormProps) {
               )}
             />
             
-            {/* Hidden File Input - managed directly */}
-            <Input 
-                type="file" 
-                accept="image/*" 
-                className="hidden"
-                ref={imageInputRef}
-                onChange={handleImageChange}
-            />
-
-            <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="rounded-full"
-                onClick={() => imageInputRef.current?.click()}
-                disabled={isLoading}
-            >
-                <ImageIcon className="h-5 w-5" />
-            </Button>
-
-            <Button
-                type="submit"
-                size="lg"
-                className="mr-2 rounded-full font-bold transition-transform duration-200 hover:scale-105"
-                disabled={isLoading || !form.formState.isValid}
-            >
-                {isLoading ? (
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                ) : (
-                  <Sparkles className="mr-2 h-5 w-5" />
-                )}
-                Generate
-            </Button>
+            <div className="flex items-center justify-between p-2 pt-0">
+                <div className="flex items-center gap-2">
+                     <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="rounded-full text-muted-foreground"
+                        onClick={() => imageInputRef.current?.click()}
+                        disabled={isLoading}
+                    >
+                        <ImageIcon className="h-5 w-5" />
+                    </Button>
+                     {/* Hidden File Input */}
+                    <Input 
+                        type="file" 
+                        accept="image/*" 
+                        className="hidden"
+                        ref={imageInputRef}
+                        onChange={handleImageChange}
+                        disabled={isLoading}
+                    />
+                </div>
+                <Button
+                    type="submit"
+                    size="lg"
+                    className="rounded-full font-bold transition-transform duration-200 hover:scale-105"
+                    disabled={isLoading || !form.formState.isValid}
+                >
+                    {isLoading ? (
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    ) : (
+                      <Sparkles className="mr-2 h-5 w-5" />
+                    )}
+                    Generate
+                </Button>
+            </div>
         </div>
+        
         <FormField
             control={form.control}
             name="topic"
-            render={() => <FormMessage className="pl-6" />}
+            render={() => <FormMessage className="pl-4" />}
         />
 
         {imagePreview && (
