@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { getTranslation } from '@/app/actions';
+import katex from 'katex';
 
 interface ExplanationCardProps {
   explanation: string;
@@ -18,6 +19,7 @@ export function ExplanationCard({ explanation }: ExplanationCardProps) {
   const [translatedText, setTranslatedText] = useState('');
   const [isTranslating, setIsTranslating] = useState(false);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
   const handleTextToSpeech = () => {
@@ -34,7 +36,7 @@ export function ExplanationCard({ explanation }: ExplanationCardProps) {
       window.speechSynthesis.cancel();
       setIsSpeaking(false);
     } else {
-      const textToSpeak = (isTranslated ? translatedText : explanation).replace(/#+\s|\*\*|\|/g, '');
+      const textToSpeak = (isTranslated ? translatedText : explanation).replace(/#+\s|\*\*|\||\$\$|\$/g, '');
       const utterance = new SpeechSynthesisUtterance(textToSpeak);
       utterance.onend = () => setIsSpeaking(false);
       utterance.onerror = () => {
@@ -96,6 +98,34 @@ export function ExplanationCard({ explanation }: ExplanationCardProps) {
 
   const textToShow = isTranslated ? translatedText : explanation;
 
+  const renderMathInText = (text: string) => {
+    const inlineMathRegex = /\$(.*?)\$/g;
+    const blockMathRegex = /\$\$(.*?)\$\$/gs;
+
+    let processedText = text.replace(blockMathRegex, (match, latex) => {
+      try {
+        return katex.renderToString(latex, { throwOnError: false, displayMode: true });
+      } catch (e) {
+        console.error("KaTeX rendering error (block):", e);
+        return match; // Return original string on error
+      }
+    });
+
+    processedText = processedText.replace(inlineMathRegex, (match, latex) => {
+      if (processedText.includes(katex.renderToString(latex.trim(), { displayMode: true, throwOnError: false }))) {
+          return match;
+      }
+      try {
+        return katex.renderToString(latex, { throwOnError: false, displayMode: false });
+      } catch (e) {
+        console.error("KaTeX rendering error (inline):", e);
+        return match; // Return original string on error
+      }
+    });
+    
+    return processedText;
+  }
+
   const renderExplanation = (text: string) => {
     const lines = text.split('\n');
     const renderedElements = [];
@@ -129,7 +159,10 @@ export function ExplanationCard({ explanation }: ExplanationCardProps) {
         tableRows = [];
     };
 
-    const processLine = (line: string) => line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    const processLine = (line: string) => {
+        const withMath = renderMathInText(line);
+        return withMath.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    }
 
     lines.forEach((line, index) => {
         const trimmedLine = line.trim();
@@ -152,6 +185,11 @@ export function ExplanationCard({ explanation }: ExplanationCardProps) {
             if (inTable) {
                 flushTable();
             }
+            
+            if (trimmedLine.startsWith('$$') && trimmedLine.endsWith('$$')) {
+                renderedElements.push(<div key={index} dangerouslySetInnerHTML={{ __html: processLine(trimmedLine) }} />);
+                return;
+            }
 
             if (line.startsWith('# ')) {
                 renderedElements.push(<h1 key={index} className="text-2xl font-bold mt-8 border-b pb-2" dangerouslySetInnerHTML={{ __html: processLine(line.substring(2)) }} />);
@@ -172,14 +210,14 @@ export function ExplanationCard({ explanation }: ExplanationCardProps) {
     }
 
     return renderedElements;
-};
+  };
 
   return (
     <Card className="glassmorphism overflow-hidden">
       <CardHeader>
         <CardTitle className="font-headline">Detailed Explanation</CardTitle>
       </CardHeader>
-      <CardContent className="prose prose-lg dark:prose-invert max-w-none text-foreground/90">
+      <CardContent ref={contentRef} className="prose prose-lg dark:prose-invert max-w-none text-foreground/90">
          <div>{renderExplanation(textToShow)}</div>
       </CardContent>
       <CardFooter className="flex justify-end gap-2">

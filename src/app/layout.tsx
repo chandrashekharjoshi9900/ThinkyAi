@@ -6,6 +6,8 @@ import { Toaster } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
 import './globals.css';
 import { AuthProvider } from '@/components/auth-provider';
+import 'katex/dist/katex.min.css';
+
 
 export const metadata: Metadata = {
   title: 'ThinkyAI - Your Interactive Learning Assistant',
