@@ -34,7 +34,7 @@ export function ExplanationCard({ explanation }: ExplanationCardProps) {
       window.speechSynthesis.cancel();
       setIsSpeaking(false);
     } else {
-      const textToSpeak = (isTranslated ? translatedText : explanation).replace(/#+\s|\*\*/g, '');
+      const textToSpeak = (isTranslated ? translatedText : explanation).replace(/#+\s|\*\*|\|/g, '');
       const utterance = new SpeechSynthesisUtterance(textToSpeak);
       utterance.onend = () => setIsSpeaking(false);
       utterance.onerror = () => {
@@ -98,43 +98,81 @@ export function ExplanationCard({ explanation }: ExplanationCardProps) {
 
   const renderExplanation = (text: string) => {
     const lines = text.split('\n');
-    let listItems: string[] = [];
     const renderedElements = [];
+    let inTable = false;
+    let tableHeader: string[] = [];
+    let tableRows: string[][] = [];
 
-    const flushList = () => {
-        if (listItems.length > 0) {
+    const flushTable = () => {
+        if (tableHeader.length > 0 && tableRows.length > 0) {
             renderedElements.push(
-                <ul key={`ul-${renderedElements.length}`} className="list-disc pl-5 space-y-1">
-                    {listItems.map((item, itemIndex) => (
-                        <li key={itemIndex} dangerouslySetInnerHTML={{ __html: item.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
-                    ))}
-                </ul>
+                <div key={`table-${renderedElements.length}`} className="overflow-x-auto my-4">
+                    <table className="w-full text-left border-collapse">
+                        <thead>
+                            <tr className="bg-muted">
+                                {tableHeader.map((header, i) => <th key={i} className="border p-2 font-semibold" dangerouslySetInnerHTML={{ __html: header }} />)}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {tableRows.map((row, i) => (
+                                <tr key={i} className="even:bg-background odd:bg-muted/50">
+                                    {row.map((cell, j) => <td key={j} className="border p-2" dangerouslySetInnerHTML={{ __html: cell }} />)}
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             );
-            listItems = [];
         }
+        inTable = false;
+        tableHeader = [];
+        tableRows = [];
     };
 
+    const processLine = (line: string) => line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
     lines.forEach((line, index) => {
-        if (line.startsWith('# ')) {
-            flushList();
-            renderedElements.push(<h1 key={index} className="text-2xl font-bold mt-8 border-b pb-2" dangerouslySetInnerHTML={{ __html: line.substring(2).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />);
-        } else if (line.startsWith('## ')) {
-            flushList();
-            renderedElements.push(<h2 key={index} className="text-xl font-bold mt-6 border-b pb-2" dangerouslySetInnerHTML={{ __html: line.substring(3).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />);
-        } else if (line.startsWith('### ')) {
-            flushList();
-            renderedElements.push(<h3 key={index} className="text-lg font-semibold mt-4" dangerouslySetInnerHTML={{ __html: line.substring(4).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />);
-        } else if (line.trim().startsWith('- ')) {
-            listItems.push(line.trim().substring(2));
-        } else if (line.trim() !== '') {
-            flushList();
-            renderedElements.push(<p key={index} dangerouslySetInnerHTML={{ __html: line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />);
+        const trimmedLine = line.trim();
+
+        if (trimmedLine.startsWith('|') && trimmedLine.endsWith('|')) {
+            if (!inTable) {
+                // Starting a new table
+                inTable = true;
+                tableHeader = trimmedLine.split('|').slice(1, -1).map(s => s.trim()).map(processLine);
+            } else {
+                // Could be separator or data row
+                const cells = trimmedLine.split('|').slice(1, -1).map(s => s.trim());
+                if (cells.every(cell => cell.match(/^-+$/))) {
+                    // This is the separator line, we can ignore it
+                } else {
+                    tableRows.push(cells.map(processLine));
+                }
+            }
+        } else {
+            if (inTable) {
+                flushTable();
+            }
+
+            if (line.startsWith('# ')) {
+                renderedElements.push(<h1 key={index} className="text-2xl font-bold mt-8 border-b pb-2" dangerouslySetInnerHTML={{ __html: processLine(line.substring(2)) }} />);
+            } else if (line.startsWith('## ')) {
+                renderedElements.push(<h2 key={index} className="text-xl font-bold mt-6 border-b pb-2" dangerouslySetInnerHTML={{ __html: processLine(line.substring(3)) }} />);
+            } else if (line.startsWith('### ')) {
+                renderedElements.push(<h3 key={index} className="text-lg font-semibold mt-4" dangerouslySetInnerHTML={{ __html: processLine(line.substring(4)) }} />);
+            } else if (line.trim().startsWith('- ')) {
+                renderedElements.push(<ul key={`ul-${index}`} className="list-disc pl-5 space-y-1"><li dangerouslySetInnerHTML={{ __html: processLine(line.trim().substring(2)) }} /></ul>);
+            } else if (line.trim() !== '') {
+                renderedElements.push(<p key={index} dangerouslySetInnerHTML={{ __html: processLine(line) }} />);
+            }
         }
     });
 
-    flushList(); // Make sure to render any remaining list items
+    if (inTable) {
+        flushTable();
+    }
+
     return renderedElements;
-  };
+};
 
   return (
     <Card className="glassmorphism overflow-hidden">
