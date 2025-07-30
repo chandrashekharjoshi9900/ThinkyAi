@@ -1,3 +1,4 @@
+
 export function Footer() {
   return (
     <footer className="py-6 md:px-8 md:py-0">
@@ -6,8 +7,8 @@ export function Footer() {
           Made by Lyriqon Innovations. &copy; {new Date().getFullYear()} ThinkyAI. All Rights Reserved.
         </p>
         <div className="flex items-center gap-4 text-sm text-muted-foreground">
-          <a href="#" className="hover:text-primary transition-colors">About</a>
-          <a href="#" className="hover:text-primary transition-colors">Privacy Policy</a>
+          <a href="/about" className="hover:text-primary transition-colors">About</a>
+          <a href="/privacy" className="hover:text-primary transition-colors">Privacy Policy</a>
           <a href="#" className="hover:text-primary transition-colors">Contact</a>
         </div>
       </div>
