@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { BrainCircuit, BookOpen, Layers, Lightbulb, Loader2, ServerCrash, History, Trash2, MessageSquare, User, Bot } from 'lucide-react';
+import { BrainCircuit, BookOpen, Layers, Lightbulb, Loader2, ServerCrash, History, Trash2, MessageSquare, User, Bot, Image as ImageIcon, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getExplanation, getQuiz, getFlashcards, getReasoning, type ExplanationContent, type QuizContent, type FlashcardsContent, type ReasoningContent } from '@/app/actions';
-import { TopicForm } from '@/components/topic-form';
+import { TopicForm, type FormValues } from '@/components/topic-form';
 import { ExplanationCard } from '@/components/explanation-card';
 import { QuizCard } from '@/components/quiz-card';
 import { Flashcards } from '@/components/flashcards';
@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/components/auth-provider';
 import { AuthDialog } from '@/components/auth-dialog';
 import { Textarea } from '@/components/ui/textarea';
+import Image from 'next/image';
 
 const GUEST_LIMIT = 3;
 
@@ -29,6 +30,8 @@ export default function Home() {
   const [currentTopic, setCurrentTopic] = useState<string>('');
   
   const [explanationContent, setExplanationContent] = useState<ExplanationContent | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+
 
   const [isQuizLoading, setIsQuizLoading] = useState(false);
   const [quizContent, setQuizContent] = useState<QuizContent | null>(null);
@@ -98,8 +101,17 @@ export default function Home() {
     }
     return false; // Limit not reached or user is logged in
   };
+  
+  const fileToDataUri = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+  }
 
-  const handleGenerateExplanation = async (topic: string) => {
+  const handleGenerateExplanation = async ({topic, image}: FormValues) => {
     if (!user && guestGenerations >= GUEST_LIMIT) {
         setIsAuthDialogOpen(true);
         return;
@@ -116,7 +128,22 @@ export default function Home() {
     setConversation([]);
     setFollowUpQuestion('');
     
-    const result = await getExplanation(topic);
+    let imageDataUri: string | undefined;
+    if (image?.[0]) {
+        try {
+            imageDataUri = await fileToDataUri(image[0]);
+            setImagePreview(imageDataUri);
+        } catch (error) {
+            console.error("Error converting image to data URI:", error);
+            setError("There was an error processing your image. Please try another one.");
+            setIsLoading(false);
+            return;
+        }
+    } else {
+        setImagePreview(null);
+    }
+    
+    const result = await getExplanation(topic, imageDataUri);
     
     if (result.error) {
       setError(result.error);
@@ -133,6 +160,10 @@ export default function Home() {
     }
     setIsLoading(false);
   };
+  
+  const handleHistoryGenerate = (topic: string) => {
+      handleGenerateExplanation({topic, image: undefined});
+  }
 
   const handleGenerateQuiz = async () => {
     if (!currentTopic) return;
@@ -281,7 +312,7 @@ export default function Home() {
               <ul className="space-y-2">
                 {history.map((topic, index) => (
                   <li key={index} className="flex items-center justify-between gap-4 rounded-md p-2 hover:bg-accent/50">
-                    <button onClick={() => handleGenerateExplanation(topic)} className="flex-grow text-left text-primary hover:underline">
+                    <button onClick={() => handleHistoryGenerate(topic)} className="flex-grow text-left text-primary hover:underline">
                       {topic}
                     </button>
                     <Button variant="ghost" size="icon" onClick={() => deleteFromHistory(topic)}>
@@ -306,6 +337,11 @@ export default function Home() {
                 <Lightbulb className="h-8 w-8 text-primary" />
                 AI Explanation
               </h2>
+              {imagePreview && (
+                  <div className="mb-6 overflow-hidden rounded-lg border">
+                    <Image src={imagePreview} alt="Uploaded topic preview" width={800} height={400} className="w-full object-cover"/>
+                  </div>
+              )}
               <ExplanationCard explanation={explanationContent.explanation} />
             </section>
             

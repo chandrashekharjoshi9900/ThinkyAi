@@ -14,6 +14,7 @@ import {z} from 'genkit';
 
 const GenerateExplanationInputSchema = z.object({
   topic: z.string().describe('The topic to generate an explanation for.'),
+  imageDataUri: z.string().optional().describe("An optional image of the topic, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."),
 });
 export type GenerateExplanationInput = z.infer<typeof GenerateExplanationInputSchema>;
 
@@ -70,7 +71,10 @@ Published in 1915, general relativity is a theory of gravitation. It describes g
 The boiling point of water at standard atmospheric pressure is 100° Celsius (212° Fahrenheit).
 
 ---
-
+{{#if imageDataUri}}
+The user has also provided an image. Use the image as the primary visual context for your explanation.
+Image: {{media url=imageDataUri}}
+{{/if}}
 Now, please respond to the following topic based on these rules.
 
 Topic: {{{topic}}}`,

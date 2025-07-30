@@ -30,13 +30,13 @@ type TranslationActionResult = { error?: string } & TranslationContent;
 type ReasoningActionResult = { error?: string } & ReasoningContent;
 
 
-export async function getExplanation(topic: string): Promise<ExplanationActionResult> {
+export async function getExplanation(topic: string, imageDataUri?: string): Promise<ExplanationActionResult> {
     if (!topic || topic.trim().length < 3) {
         return { error: 'Please enter a valid topic (at least 3 characters).' };
     }
 
     try {
-        const explanationResult = await generateExplanation({ topic });
+        const explanationResult = await generateExplanation({ topic, imageDataUri });
         const explanation = explanationResult.explanation;
 
         if (!explanation) {
