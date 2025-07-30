@@ -1,13 +1,15 @@
+
 // src/components/explanation-card.tsx
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Volume2, VolumeX, Languages, Loader2 } from 'lucide-react';
+import { Volume2, VolumeX, Languages, Loader2, Copy, Check } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { getTranslation } from '@/app/actions';
 import katex from 'katex';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 
 interface ExplanationCardProps {
   explanation: string;
@@ -18,6 +20,7 @@ export function ExplanationCard({ explanation }: ExplanationCardProps) {
   const [isTranslated, setIsTranslated] = useState(false);
   const [translatedText, setTranslatedText] = useState('');
   const [isTranslating, setIsTranslating] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
@@ -84,10 +87,29 @@ export function ExplanationCard({ explanation }: ExplanationCardProps) {
     }
   }
 
+  const handleCopy = () => {
+    const textToCopy = (isTranslated ? translatedText : explanation);
+    navigator.clipboard.writeText(textToCopy).then(() => {
+        setIsCopied(true);
+        toast({
+            title: 'Copied to clipboard!',
+        });
+        setTimeout(() => setIsCopied(false), 2000);
+    }).catch(err => {
+        console.error('Failed to copy text: ', err);
+        toast({
+            variant: 'destructive',
+            title: 'Copy Failed',
+            description: 'Could not copy text to clipboard.',
+        });
+    });
+  };
+
   useEffect(() => {
-    // Reset translation when explanation changes
+    // Reset states when explanation changes
     setIsTranslated(false);
     setTranslatedText('');
+    setIsCopied(false);
     
     return () => {
       if (window.speechSynthesis) {
@@ -221,6 +243,19 @@ export function ExplanationCard({ explanation }: ExplanationCardProps) {
          <div>{renderExplanation(textToShow)}</div>
       </CardContent>
       <CardFooter className="flex justify-end gap-2">
+         <TooltipProvider>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button variant="outline" size="icon" onClick={handleCopy}>
+                        {isCopied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                    <p>Copy Explanation</p>
+                </TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
+
         <Button variant="outline" onClick={handleTranslate} disabled={isTranslating} className="transition-all hover:scale-105">
           {isTranslating ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
