@@ -40,6 +40,9 @@ export function TopicForm({ onGenerate, isLoading }: TopicFormProps) {
     onGenerate(data);
     form.reset();
     setImagePreview(null);
+    if (imageInputRef.current) {
+        imageInputRef.current.value = '';
+    }
   };
   
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -119,7 +122,7 @@ export function TopicForm({ onGenerate, isLoading }: TopicFormProps) {
                 type="submit"
                 size="lg"
                 className="mr-2 rounded-full font-bold transition-transform duration-200 hover:scale-105"
-                disabled={isLoading}
+                disabled={isLoading || !form.formState.isValid}
             >
                 {isLoading ? (
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
