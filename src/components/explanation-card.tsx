@@ -162,25 +162,20 @@ export function ExplanationCard({ explanation }: ExplanationCardProps) {
     const inlineMathRegex = /\\((.*?)\\)/g;
     const blockMathRegex = /\\\[(.*?)\\\]/gs;
     
-    // For KaTeX, we need to replace $...$ with \(...\) and $$...$$ with \[...\]
-    let processedText = text.replace(/\$\$(.*?)\$\$/gs, '\\[$1\\]').replace(/\$(.*?)\$/g, '\\($1\\)');
-
-    processedText = processedText.replace(blockMathRegex, (match, latex) => {
-      try {
-        return katex.renderToString(latex, { throwOnError: false, displayMode: true });
-      } catch (e) {
-        return match;
-      }
+    let processedText = text.replace(/\$\$(.*?)\$\$/gs, (_match, latex) => {
+        try {
+            return katex.renderToString(latex, { throwOnError: false, displayMode: true });
+        } catch (e) {
+            return `Error rendering math: ${latex}`;
+        }
+    }).replace(/\$(.*?)\$/g, (_match, latex) => {
+         try {
+            return katex.renderToString(latex, { throwOnError: false, displayMode: false });
+        } catch (e) {
+            return `Error rendering math: ${latex}`;
+        }
     });
 
-    processedText = processedText.replace(inlineMathRegex, (match, latex) => {
-      try {
-        return katex.renderToString(latex, { throwOnError: false, displayMode: false });
-      } catch (e) {
-        return match;
-      }
-    });
-    
     return processedText;
   }
   
@@ -189,19 +184,19 @@ export function ExplanationCard({ explanation }: ExplanationCardProps) {
     const parts = text.split(codeBlockRegex);
     
     return parts.map((part, index) => {
-        // Every 3rd part is the code, 2nd is the lang
+        // Part is code
         if (index % 3 === 2) {
             const lang = parts[index - 1] || '';
-            const code = part;
-            return <CodeBlock key={index} lang={lang} code={code} />;
+            return <CodeBlock key={index} lang={lang} code={part} />;
         }
-        // Every 1st part is the language, which we've already used
+        // Part is language identifier
         if (index % 3 === 1) {
             return null;
         }
 
+        // Part is regular text
         const lines = part.split('\n');
-        const renderedElements = [];
+        const renderedElements: JSX.Element[] = [];
         let inTable = false;
         let tableHeader: string[] = [];
         let tableRows: string[][] = [];
@@ -213,13 +208,13 @@ export function ExplanationCard({ explanation }: ExplanationCardProps) {
                         <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr className="bg-muted">
-                                    {tableHeader.map((header, i) => <th key={i} className="border p-2 font-semibold" dangerouslySetInnerHTML={{ __html: header }} />)}
+                                    {tableHeader.map((header, i) => <th key={i} className="border p-2 font-semibold" dangerouslySetInnerHTML={{ __html: renderMathInText(header) }} />)}
                                 </tr>
                             </thead>
                             <tbody>
                                 {tableRows.map((row, i) => (
                                     <tr key={i} className="even:bg-background odd:bg-muted/50">
-                                        {row.map((cell, j) => <td key={j} className="border p-2" dangerouslySetInnerHTML={{ __html: cell }} />)}
+                                        {row.map((cell, j) => <td key={j} className="border p-2" dangerouslySetInnerHTML={{ __html: renderMathInText(cell) }} />)}
                                     </tr>
                                 ))}
                             </tbody>
@@ -232,24 +227,25 @@ export function ExplanationCard({ explanation }: ExplanationCardProps) {
             tableRows = [];
         };
 
-        const processLine = (line: string) => {
+        const processLine = (line: string): string => {
             const withMath = renderMathInText(line);
             return withMath.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
         }
 
         lines.forEach((line, lineIndex) => {
             const trimmedLine = line.trim();
+            const key = `${index}-${lineIndex}`;
 
             if (trimmedLine.startsWith('|') && trimmedLine.endsWith('|')) {
                 if (!inTable) {
                     inTable = true;
-                    tableHeader = trimmedLine.split('|').slice(1, -1).map(s => s.trim()).map(processLine);
+                    tableHeader = trimmedLine.split('|').slice(1, -1).map(s => s.trim());
                 } else {
                     const cells = trimmedLine.split('|').slice(1, -1).map(s => s.trim());
                     if (cells.every(cell => cell.match(/^-+$/))) {
                         // This is the separator line, ignore it
                     } else {
-                        tableRows.push(cells.map(processLine));
+                        tableRows.push(cells);
                     }
                 }
             } else {
@@ -258,15 +254,25 @@ export function ExplanationCard({ explanation }: ExplanationCardProps) {
                 }
                 
                 if (line.startsWith('# ')) {
-                    renderedElements.push(<h1 key={`${index}-${lineIndex}`} className="text-2xl font-bold mt-8 border-b pb-2" dangerouslySetInnerHTML={{ __html: processLine(line.substring(2)) }} />);
+                    renderedElements.push(<h1 key={key} className="text-2xl font-bold mt-8 border-b pb-2" dangerouslySetInnerHTML={{ __html: processLine(line.substring(2)) }} />);
                 } else if (line.startsWith('## ')) {
-                    renderedElements.push(<h2 key={`${index}-${lineIndex}`} className="text-xl font-bold mt-6 border-b pb-2" dangerouslySetInnerHTML={{ __html: processLine(line.substring(3)) }} />);
+                    renderedElements.push(<h2 key={key} className="text-xl font-bold mt-6 border-b pb-2" dangerouslySetInnerHTML={{ __html: processLine(line.substring(3)) }} />);
                 } else if (line.startsWith('### ')) {
-                    renderedElements.push(<h3 key={`${index}-${lineIndex}`} className="text-lg font-semibold mt-4" dangerouslySetInnerHTML={{ __html: processLine(line.substring(4)) }} />);
+                    renderedElements.push(<h3 key={key} className="text-lg font-semibold mt-4" dangerouslySetInnerHTML={{ __html: processLine(line.substring(4)) }} />);
                 } else if (line.trim().startsWith('- ')) {
-                    renderedElements.push(<ul key={`ul-${index}-${lineIndex}`} className="list-disc pl-5 space-y-1"><li dangerouslySetInnerHTML={{ __html: processLine(line.trim().substring(2)) }} /></ul>);
+                    const listKey = `ul-${key}`;
+                    const lastElement = renderedElements[renderedElements.length - 1];
+                    const newLi = <li key={key} dangerouslySetInnerHTML={{ __html: processLine(line.trim().substring(2)) }} />;
+
+                    // If the last element was a list, append to it
+                    if (lastElement && lastElement.type === 'ul') {
+                         const updatedUl = React.cloneElement(lastElement, {}, [...lastElement.props.children, newLi]);
+                         renderedElements[renderedElements.length -1] = updatedUl;
+                    } else {
+                         renderedElements.push(<ul key={listKey} className="list-disc pl-5 space-y-1">{newLi}</ul>);
+                    }
                 } else if (line.trim() !== '') {
-                    renderedElements.push(<p key={`${index}-${lineIndex}`} dangerouslySetInnerHTML={{ __html: processLine(line) }} />);
+                    renderedElements.push(<p key={key} dangerouslySetInnerHTML={{ __html: processLine(line) }} />);
                 }
             }
         });
