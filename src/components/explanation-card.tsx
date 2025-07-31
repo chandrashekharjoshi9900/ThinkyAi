@@ -2,7 +2,7 @@
 // src/components/explanation-card.tsx
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Fragment } from 'react';
 import { Volume2, VolumeX, Languages, Loader2, Copy, Check } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,10 +10,48 @@ import { useToast } from '@/hooks/use-toast';
 import { getTranslation } from '@/app/actions';
 import katex from 'katex';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
+
 
 interface ExplanationCardProps {
   explanation: string;
 }
+
+const CodeBlock = ({ lang, code }: { lang: string, code: string }) => {
+  const [isCopied, setIsCopied] = useState(false);
+  const { toast } = useToast();
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(code).then(() => {
+      setIsCopied(true);
+      toast({ title: 'Code copied to clipboard!' });
+      setTimeout(() => setIsCopied(false), 2000);
+    }).catch(err => {
+      console.error('Failed to copy code: ', err);
+      toast({
+        variant: 'destructive',
+        title: 'Copy Failed',
+        description: 'Could not copy code to clipboard.',
+      });
+    });
+  };
+
+  return (
+    <div className="relative my-4 rounded-md bg-zinc-900 text-sm">
+        <div className="flex items-center justify-between px-4 py-1.5 border-b border-zinc-700">
+            <span className="text-xs font-sans text-zinc-400">{lang || 'code'}</span>
+            <Button variant="ghost" size="icon" onClick={handleCopy} className="h-6 w-6 text-zinc-400 hover:text-white hover:bg-zinc-700">
+                {isCopied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+            </Button>
+        </div>
+      <SyntaxHighlighter language={lang} style={vscDarkPlus} customStyle={{ margin: 0, borderRadius: '0 0 0.375rem 0.375rem', padding: '1rem', backgroundColor: '#1E1E1E' }}>
+        {code}
+      </SyntaxHighlighter>
+    </div>
+  );
+};
+
 
 export function ExplanationCard({ explanation }: ExplanationCardProps) {
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -39,7 +77,7 @@ export function ExplanationCard({ explanation }: ExplanationCardProps) {
       window.speechSynthesis.cancel();
       setIsSpeaking(false);
     } else {
-      const textToSpeak = (isTranslated ? translatedText : explanation).replace(/#+\s|\*\*|\||\$\$|\$/g, '');
+      const textToSpeak = (isTranslated ? translatedText : explanation).replace(/#+\s|\*\*|\||\$\$|\$|```[\s\S]*?```/g, '');
       const utterance = new SpeechSynthesisUtterance(textToSpeak);
       utterance.onend = () => setIsSpeaking(false);
       utterance.onerror = () => {
@@ -121,117 +159,124 @@ export function ExplanationCard({ explanation }: ExplanationCardProps) {
   const textToShow = isTranslated ? translatedText : explanation;
 
   const renderMathInText = (text: string) => {
-    const inlineMathRegex = /\$(.*?)\$/g;
-    const blockMathRegex = /\$\$(.*?)\$\$/gs;
+    const inlineMathRegex = /\\((.*?)\\)/g;
+    const blockMathRegex = /\\\[(.*?)\\\]/gs;
+    
+    // For KaTeX, we need to replace $...$ with \(...\) and $$...$$ with \[...\]
+    let processedText = text.replace(/\$\$(.*?)\$\$/gs, '\\[$1\\]').replace(/\$(.*?)\$/g, '\\($1\\)');
 
-    let processedText = text.replace(blockMathRegex, (match, latex) => {
+    processedText = processedText.replace(blockMathRegex, (match, latex) => {
       try {
         return katex.renderToString(latex, { throwOnError: false, displayMode: true });
       } catch (e) {
-        console.error("KaTeX rendering error (block):", e);
-        return match; // Return original string on error
+        return match;
       }
     });
 
     processedText = processedText.replace(inlineMathRegex, (match, latex) => {
-      if (processedText.includes(katex.renderToString(latex.trim(), { displayMode: true, throwOnError: false }))) {
-          return match;
-      }
       try {
         return katex.renderToString(latex, { throwOnError: false, displayMode: false });
       } catch (e) {
-        console.error("KaTeX rendering error (inline):", e);
-        return match; // Return original string on error
+        return match;
       }
     });
     
     return processedText;
   }
-
+  
   const renderExplanation = (text: string) => {
-    const lines = text.split('\n');
-    const renderedElements = [];
-    let inTable = false;
-    let tableHeader: string[] = [];
-    let tableRows: string[][] = [];
-
-    const flushTable = () => {
-        if (tableHeader.length > 0 && tableRows.length > 0) {
-            renderedElements.push(
-                <div key={`table-${renderedElements.length}`} className="overflow-x-auto my-4">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="bg-muted">
-                                {tableHeader.map((header, i) => <th key={i} className="border p-2 font-semibold" dangerouslySetInnerHTML={{ __html: header }} />)}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {tableRows.map((row, i) => (
-                                <tr key={i} className="even:bg-background odd:bg-muted/50">
-                                    {row.map((cell, j) => <td key={j} className="border p-2" dangerouslySetInnerHTML={{ __html: cell }} />)}
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            );
+    const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
+    const parts = text.split(codeBlockRegex);
+    
+    return parts.map((part, index) => {
+        // Every 3rd part is the code, 2nd is the lang
+        if (index % 3 === 2) {
+            const lang = parts[index - 1] || '';
+            const code = part;
+            return <CodeBlock key={index} lang={lang} code={code} />;
         }
-        inTable = false;
-        tableHeader = [];
-        tableRows = [];
-    };
+        // Every 1st part is the language, which we've already used
+        if (index % 3 === 1) {
+            return null;
+        }
 
-    const processLine = (line: string) => {
-        const withMath = renderMathInText(line);
-        return withMath.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    }
+        const lines = part.split('\n');
+        const renderedElements = [];
+        let inTable = false;
+        let tableHeader: string[] = [];
+        let tableRows: string[][] = [];
 
-    lines.forEach((line, index) => {
-        const trimmedLine = line.trim();
+        const flushTable = () => {
+            if (tableHeader.length > 0 && tableRows.length > 0) {
+                renderedElements.push(
+                    <div key={`table-${renderedElements.length}-${index}`} className="overflow-x-auto my-4">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="bg-muted">
+                                    {tableHeader.map((header, i) => <th key={i} className="border p-2 font-semibold" dangerouslySetInnerHTML={{ __html: header }} />)}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {tableRows.map((row, i) => (
+                                    <tr key={i} className="even:bg-background odd:bg-muted/50">
+                                        {row.map((cell, j) => <td key={j} className="border p-2" dangerouslySetInnerHTML={{ __html: cell }} />)}
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                );
+            }
+            inTable = false;
+            tableHeader = [];
+            tableRows = [];
+        };
 
-        if (trimmedLine.startsWith('|') && trimmedLine.endsWith('|')) {
-            if (!inTable) {
-                // Starting a new table
-                inTable = true;
-                tableHeader = trimmedLine.split('|').slice(1, -1).map(s => s.trim()).map(processLine);
-            } else {
-                // Could be separator or data row
-                const cells = trimmedLine.split('|').slice(1, -1).map(s => s.trim());
-                if (cells.every(cell => cell.match(/^-+$/))) {
-                    // This is the separator line, we can ignore it
+        const processLine = (line: string) => {
+            const withMath = renderMathInText(line);
+            return withMath.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        }
+
+        lines.forEach((line, lineIndex) => {
+            const trimmedLine = line.trim();
+
+            if (trimmedLine.startsWith('|') && trimmedLine.endsWith('|')) {
+                if (!inTable) {
+                    inTable = true;
+                    tableHeader = trimmedLine.split('|').slice(1, -1).map(s => s.trim()).map(processLine);
                 } else {
-                    tableRows.push(cells.map(processLine));
+                    const cells = trimmedLine.split('|').slice(1, -1).map(s => s.trim());
+                    if (cells.every(cell => cell.match(/^-+$/))) {
+                        // This is the separator line, ignore it
+                    } else {
+                        tableRows.push(cells.map(processLine));
+                    }
+                }
+            } else {
+                if (inTable) {
+                    flushTable();
+                }
+                
+                if (line.startsWith('# ')) {
+                    renderedElements.push(<h1 key={`${index}-${lineIndex}`} className="text-2xl font-bold mt-8 border-b pb-2" dangerouslySetInnerHTML={{ __html: processLine(line.substring(2)) }} />);
+                } else if (line.startsWith('## ')) {
+                    renderedElements.push(<h2 key={`${index}-${lineIndex}`} className="text-xl font-bold mt-6 border-b pb-2" dangerouslySetInnerHTML={{ __html: processLine(line.substring(3)) }} />);
+                } else if (line.startsWith('### ')) {
+                    renderedElements.push(<h3 key={`${index}-${lineIndex}`} className="text-lg font-semibold mt-4" dangerouslySetInnerHTML={{ __html: processLine(line.substring(4)) }} />);
+                } else if (line.trim().startsWith('- ')) {
+                    renderedElements.push(<ul key={`ul-${index}-${lineIndex}`} className="list-disc pl-5 space-y-1"><li dangerouslySetInnerHTML={{ __html: processLine(line.trim().substring(2)) }} /></ul>);
+                } else if (line.trim() !== '') {
+                    renderedElements.push(<p key={`${index}-${lineIndex}`} dangerouslySetInnerHTML={{ __html: processLine(line) }} />);
                 }
             }
-        } else {
-            if (inTable) {
-                flushTable();
-            }
-            
-            if (trimmedLine.startsWith('$$') && trimmedLine.endsWith('$$')) {
-                renderedElements.push(<div key={index} dangerouslySetInnerHTML={{ __html: processLine(trimmedLine) }} />);
-                return;
-            }
+        });
 
-            if (line.startsWith('# ')) {
-                renderedElements.push(<h1 key={index} className="text-2xl font-bold mt-8 border-b pb-2" dangerouslySetInnerHTML={{ __html: processLine(line.substring(2)) }} />);
-            } else if (line.startsWith('## ')) {
-                renderedElements.push(<h2 key={index} className="text-xl font-bold mt-6 border-b pb-2" dangerouslySetInnerHTML={{ __html: processLine(line.substring(3)) }} />);
-            } else if (line.startsWith('### ')) {
-                renderedElements.push(<h3 key={index} className="text-lg font-semibold mt-4" dangerouslySetInnerHTML={{ __html: processLine(line.substring(4)) }} />);
-            } else if (line.trim().startsWith('- ')) {
-                renderedElements.push(<ul key={`ul-${index}`} className="list-disc pl-5 space-y-1"><li dangerouslySetInnerHTML={{ __html: processLine(line.trim().substring(2)) }} /></ul>);
-            } else if (line.trim() !== '') {
-                renderedElements.push(<p key={index} dangerouslySetInnerHTML={{ __html: processLine(line) }} />);
-            }
+        if (inTable) {
+            flushTable();
         }
+
+        return <Fragment key={index}>{renderedElements}</Fragment>;
     });
-
-    if (inTable) {
-        flushTable();
-    }
-
-    return renderedElements;
   };
 
   return (

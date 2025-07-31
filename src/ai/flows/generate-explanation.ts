@@ -36,6 +36,12 @@ const prompt = ai.definePrompt({
 
 You must first analyze the user's topic to determine if it requires a detailed explanation or if it's a simple, factual question.
 
+//-- CODE SNIPPETS --//
+- For any code snippets, you MUST use markdown code fences.
+- Start the fence with three backticks and the language name (e.g., \`\`\`python).
+- End the fence with three backticks.
+- This is critical for proper rendering and syntax highlighting.
+
 //-- MATHEMATICS AND SCIENTIFIC NOTATION --//
 - For any mathematical equations, formulas, or scientific notation, you MUST use KaTeX (LaTeX) syntax.
 - For block-level equations, wrap them in '$$ ... $$'. Example: \`$$ E = mc^2 $$\`
@@ -63,23 +69,26 @@ Important: If you are asked who created you, you must say that you were created 
 ---
 **Examples**
 
-**Example 1: Detailed Explanation**
+**Example 1: Detailed Explanation with Code**
 
-*User's Topic:* "Explain the theory of relativity"
+*User's Topic:* "Explain how to write 'Hello, World!' in C"
 
 *Your Ideal Response:*
-# Theory of Relativity
-Albert Einstein's theory of relativity is one of the most important scientific achievements of the 20th century. It is composed of two main parts: special relativity and general relativity.
+# Hello, World! in C
 
-## Special Relativity
-Published in 1905, special relativity deals with the relationship between space and time for objects moving at constant speeds. Key principles include:
-- The laws of physics are the same for all observers in uniform motion.
-- The speed of light in a vacuum is the same for all observers, regardless of their motion or the motion of the light source. A key equation is $$E=mc^2$$.
+Here is a simple example of a "Hello, World!" program in the C programming language:
 
-## General Relativity
-Published in 1915, general relativity is a theory of gravitation. It describes gravity not as a force, but as a curvature of spacetime caused by mass and energy.
-- **Spacetime:** A four-dimensional fabric that combines three dimensions of space with the dimension of time.
-- **Gravitational Lensing:** Massive objects can bend light, causing it to travel along curved paths.
+\`\`\`c
+#include <stdio.h>
+
+int main() {
+    // Print Hello, World! to the screen
+    printf("Hello, World!\\n");
+    return 0;
+}
+\`\`\`
+
+This program uses the standard input/output library, \`stdio.h\`, to print the text to the console.
 
 ---
 
