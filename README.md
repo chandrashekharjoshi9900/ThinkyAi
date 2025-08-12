@@ -3,7 +3,7 @@
 A powerful, server-rendered AI chatbot built with **Next.js**, **Firebase Authentication**, and Google's **Gemini 1.5 Flash** API. This project provides a fast, secure, and scalable foundation for a modern conversational AI application.
 
 <!-- Add a screenshot or a GIF of your project here for a better impression! -->
-![ThinkyAi Demo](Screenshot (105).png)
+
 
 ## ✨ Features
 
